@@ -23,10 +23,11 @@ export const getStaticProps = async () => {
           newAccessToken
       );
       const runData = await res.json();
+      
 
       return {
         props: {
-          runs: runData.map(
+          runs: runData.reverse().map(
             (run: { distance: number; start_date_local: string }) => {
               const count = Math.round(run.distance / 1609);
               const date = new Date(run.start_date_local)
