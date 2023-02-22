@@ -1,13 +1,16 @@
 import Head from "next/head";
-
 import styles from "@/styles/Home.module.css";
-import Heatmap from "@/components/Heatmap";
+
+import ActivityCalendar from "react-activity-calendar";
+import Tooltip from "react-tooltip"
 
 export const getStaticProps = async () => {
   const stravaClientId = process.env.clientId;
   const stravaClientSecret = process.env.clientSecret;
   const stravaAuthorizationCode = process.env.authorizationCode;
   const stravaRefreshToken = process.env.refreshToken;
+
+  const todayDateString = new Date().toISOString().replace(/T.*/, "");
 
   const refreshStravaTokenUrl = `https://www.strava.com/oauth/token?client_id=${stravaClientId}&client_secret=${stravaClientSecret}&code=${stravaAuthorizationCode}&grant_type=refresh_token&refresh_token=${stravaRefreshToken}`;
 
@@ -22,29 +25,35 @@ export const getStaticProps = async () => {
         "https://www.strava.com/api/v3/athlete/activities?access_token=" +
           newAccessToken
       );
-      const runData = await res.json();
-      
+      const athleteData = await res.json();
+      let runData = athleteData.reverse().map((run: { distance: number; start_date_local: string }) => {
+        const count = Math.round(run.distance / 1609);
+        const date = new Date(run.start_date_local)
+          .toISOString()
+          .replace(/T.*/, "");
+        let level;
+        if (count <= 3) level = 1;
+        if (count <= 6 && count > 3) level = 2;
+        if (count <= 9 && count > 6) level = 3;
+        if (count > 9) level = 4;
+        return {
+          count: count,
+          date: date,
+          level: level,
+        };
+      })
+
+      const lastRunDate = new Date(runData[runData.length - 1].date);
+    let todayDate = new Date(todayDateString);
+    if (lastRunDate < todayDate) {
+      runData = [...runData, { count: 0, date: todayDateString, level: 0 }];
+    }
+
+    runData = [{ count: 0, date: '2023-01-01', level: 0 }, ...runData]
 
       return {
         props: {
-          runs: runData.reverse().map(
-            (run: { distance: number; start_date_local: string }) => {
-              const count = Math.round(run.distance / 1609);
-              const date = new Date(run.start_date_local)
-                .toISOString()
-                .replace(/T.*/, "");
-              let level;
-              if (count <= 3) level = 1;
-              if (count <= 6 && count > 3) level = 2;
-              if (count <= 9 && count > 6) level = 3;
-              if (count > 9) level = 4;
-              return {
-                count: count,
-                date: date,
-                level: level,
-              };
-            }
-          ),
+          runs: runData
         },
       };
     } catch (err) {}
@@ -59,7 +68,7 @@ export const getStaticProps = async () => {
 };
 
 export default function Home({ runs }: any) {
-  console.log(runs);
+
   return (
     <>
       <Head>
@@ -70,7 +79,32 @@ export default function Home({ runs }: any) {
       </Head>
       <main className={styles.main}>
         <h1>{new Date().toISOString().replace(/T.*/, "")}</h1>
-        <Heatmap />
+       
+        <ActivityCalendar
+        color="#ff00ff"
+        data={runs}
+        hideColorLegend
+        hideTotalCount
+        labels={{
+          months: [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+          ],
+          tooltip: `<strong>Angel ran {{count}} miles</strong> on {{date}}`,
+        }}
+      >
+        <Tooltip html />
+      </ActivityCalendar>
       </main>
     </>
   );
