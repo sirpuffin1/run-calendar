@@ -3,6 +3,7 @@ import styles from "@/styles/Home.module.css";
 
 import ActivityCalendar from "react-activity-calendar";
 import Tooltip from "react-tooltip"
+import { useEffect, useState } from "react";
 
 export const getStaticProps = async () => {
   const stravaClientId = process.env.clientId;
@@ -56,18 +57,29 @@ export const getStaticProps = async () => {
           runs: runData
         },
       };
-    } catch (err) {}
+    } catch (err) {
+      return {
+        props: {
+          error: err
+        }
+      }
+    }
   } catch (err) {
-    console.log(err);
+    return {
+      props: {
+        error: err
+      }
+    }
   }
-  return {
-    props: {
-      type: "hello",
-    },
-  };
+
 };
 
 export default function Home({ runs }: any) {
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  },[])
 
   return (
     <>
@@ -103,7 +115,7 @@ export default function Home({ runs }: any) {
           tooltip: `<strong>Angel ran {{count}} miles</strong> on {{date}}`,
         }}
       >
-        <Tooltip html />
+        {isMounted && <Tooltip html />}
       </ActivityCalendar>
       </main>
     </>
