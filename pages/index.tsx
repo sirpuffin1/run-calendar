@@ -1,10 +1,64 @@
-import Head from 'next/head'
+import Head from "next/head";
 
+import styles from "@/styles/Home.module.css";
+import Heatmap from "@/components/Heatmap";
 
-import styles from '@/styles/Home.module.css'
-import Heatmap from '@/components/Heatmap'
+export const getStaticProps = async () => {
+  const stravaClientId = process.env.clientId;
+  const stravaClientSecret = process.env.clientSecret;
+  const stravaAuthorizationCode = process.env.authorizationCode;
+  const stravaRefreshToken = process.env.refreshToken;
 
-export default function Home() {
+  const refreshStravaTokenUrl = `https://www.strava.com/oauth/token?client_id=${stravaClientId}&client_secret=${stravaClientSecret}&code=${stravaAuthorizationCode}&grant_type=refresh_token&refresh_token=${stravaRefreshToken}`;
+
+  try {
+    const res = await fetch(refreshStravaTokenUrl, {
+      method: "POST",
+    });
+    const data = await res.json();
+    const newAccessToken = data.access_token;
+    try {
+      const res = await fetch(
+        "https://www.strava.com/api/v3/athlete/activities?access_token=" +
+          newAccessToken
+      );
+      const runData = await res.json();
+
+      return {
+        props: {
+          runs: runData.map(
+            (run: { distance: number; start_date_local: string }) => {
+              const count = Math.round(run.distance / 1609);
+              const date = new Date(run.start_date_local)
+                .toISOString()
+                .replace(/T.*/, "");
+              let level;
+              if (count <= 3) level = 1;
+              if (count <= 6 && count > 3) level = 2;
+              if (count <= 9 && count > 6) level = 3;
+              if (count > 9) level = 4;
+              return {
+                count: count,
+                date: date,
+                level: level,
+              };
+            }
+          ),
+        },
+      };
+    } catch (err) {}
+  } catch (err) {
+    console.log(err);
+  }
+  return {
+    props: {
+      type: "hello",
+    },
+  };
+};
+
+export default function Home({ runs }: any) {
+  console.log(runs);
   return (
     <>
       <Head>
@@ -15,8 +69,8 @@ export default function Home() {
       </Head>
       <main className={styles.main}>
         <h1>{new Date().toISOString().replace(/T.*/, "")}</h1>
-        <Heatmap/>
+        <Heatmap />
       </main>
     </>
-  )
+  );
 }
