@@ -53,7 +53,8 @@ export const getStaticProps = async () => {
 
       return {
         props: {
-          runs: runData
+          runs: runData,
+          todayDateString
         },
       };
     } catch (err) {
@@ -73,7 +74,7 @@ export const getStaticProps = async () => {
 
 };
 
-export default function Home({ runs }: any) {
+export default function Home({ runs, todayDateString }: any) {
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
@@ -89,7 +90,7 @@ export default function Home({ runs }: any) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
-        <h1>{new Date().toISOString().replace(/T.*/, "")}</h1>
+        <h1>{ todayDateString }</h1>
        
         <ActivityCalendar
         color="#ff00ff"
