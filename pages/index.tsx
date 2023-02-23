@@ -77,8 +77,19 @@ export const getStaticProps = async () => {
 export default function Home({ runs, todayDateString }: any) {
   const [isMounted, setIsMounted] = useState(false)
 
+  
+
   useEffect(() => {
     setIsMounted(true)
+    setTimeout(() => {
+      const rectangles = document.querySelectorAll('rect')
+      rectangles.forEach((rectangle) => {
+        if(rectangle.dataset.tip && rectangle.dataset.tip.includes('ran 0 miles')) {
+            rectangle.dataset.tip = rectangle.dataset.tip.replace('ran 0 miles', 'rested')
+        }
+    })
+    }, 300)
+    
   },[])
 
   return (
