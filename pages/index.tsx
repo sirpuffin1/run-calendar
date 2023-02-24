@@ -4,7 +4,7 @@ import ActivityCalendar from "react-activity-calendar";
 import Tooltip from "react-tooltip"
 import { useEffect, useState } from "react";
 
-export const getStaticProps = async () => {
+export const getServerSideProps = async () => {
   const stravaClientId = process.env.clientId;
   const stravaClientSecret = process.env.clientSecret;
   const stravaAuthorizationCode = process.env.authorizationCode;
